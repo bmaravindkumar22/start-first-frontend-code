@@ -1,0 +1,27 @@
+/* Styles Tailwind's utility classes don't cover: the drag-over state and the
+   score bar animation. Everything else is Tailwind classes in index.html. */
+
+.dropzone.is-dragover {
+    border-color: #818cf8;
+    background-color: rgb(99 102 241 / 0.12);
+    transform: scale(1.02);
+    box-shadow: 0 0 40px -10px rgb(129 140 248 / 0.6);
+}
+
+.dropzone:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: 3px;
+}
+
+/* Score bar fill transition, applied by app.js. */
+.bar-fill {
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .bar-fill,
+    .dropzone {
+        transition: none !important;
+    }
+}

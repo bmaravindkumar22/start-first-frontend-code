@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resume Parser | Match your resume to a job description</title>
+    <meta name="description"
+        content="Upload your resume and a job description to see your match score, missing keywords and what to improve." />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: "class" };
+    </script>
+    <!-- Parsers for PDF and Word files, loaded from a CDN. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="min-h-screen bg-black text-zinc-100 antialiased">
+    <!-- Ambient glow behind the page -->
+    <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+        <div class="absolute -top-40 -left-32 h-[32rem] w-[32rem] rounded-full bg-indigo-600/25 blur-3xl"></div>
+        <div class="absolute top-1/3 -right-40 h-[28rem] w-[28rem] rounded-full bg-fuchsia-600/20 blur-3xl"></div>
+        <div class="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-cyan-500/15 blur-3xl"></div>
+    </div>
+
+    <header class="sticky top-0 z-20 border-b border-white/10 bg-black/70 backdrop-blur-md">
+        <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+            <span
+                class="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text font-extrabold tracking-wide text-transparent">
+                ResumeParser
+            </span>
+            <a href="#analyzer"
+                class="rounded-lg bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:-translate-y-0.5 hover:brightness-110">Try
+                it</a>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-6">
+        <!-- Hero -->
+        <section class="pt-20 pb-12 text-center">
+            <span
+                class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-indigo-300">
+                <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-400"></span>
+                Stop guessing what recruiters want
+            </span>
+            <h1 class="mt-6 text-4xl font-extrabold tracking-tight sm:text-6xl">
+                See how well your resume matches
+                <span
+                    class="bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-cyan-300 bg-clip-text text-transparent">this
+                    job</span>
+            </h1>
+            <p class="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-zinc-400">
+                Drop in your resume and paste the job description. You get a score, the keywords you are missing,
+                and the strengths and gaps to fix before you apply.
+            </p>
+        </section>
+
+        <!-- Analyzer -->
+        <section id="analyzer"
+            class="grid gap-6 rounded-3xl border border-white/10 bg-zinc-950/80 p-6 shadow-2xl shadow-indigo-900/20 backdrop-blur md:grid-cols-2 md:p-8">
+            <div>
+                <h2 class="flex items-center gap-2 text-lg font-bold">
+                    <span
+                        class="grid h-7 w-7 place-items-center rounded-full bg-indigo-500/20 text-sm text-indigo-300">1</span>
+                    Upload your resume
+                </h2>
+                <label id="dropzone" for="file-input"
+                    class="dropzone mt-4 flex h-56 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-white/15 bg-white/[0.03] p-6 text-center transition hover:border-indigo-400/60 hover:bg-indigo-500/5">
+                    <svg class="h-12 w-12 text-indigo-400" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 16V4m0 0l-4 4m4-4l4 4M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+                    </svg>
+                    <p class="mt-4 font-semibold text-zinc-100">Drag and drop your resume here</p>
+                    <p class="text-sm text-zinc-400">or <span class="font-semibold text-indigo-400">browse</span> to
+                        choose a file</p>
+                    <p class="mt-2 text-xs text-zinc-500">PDF or DOCX, up to 5 MB</p>
+                    <p id="file-name"
+                        class="mt-4 hidden max-w-full truncate rounded-full bg-indigo-500/20 px-3 py-1 text-sm font-medium text-indigo-200 ring-1 ring-indigo-400/30">
+                    </p>
+                </label>
+                <input id="file-input" type="file" accept=".pdf,.docx" class="sr-only" />
+            </div>
+
+            <div class="flex flex-col">
+                <h2 class="flex items-center gap-2 text-lg font-bold">
+                    <span
+                        class="grid h-7 w-7 place-items-center rounded-full bg-fuchsia-500/20 text-sm text-fuchsia-300">2</span>
+                    Paste the job description
+                </h2>
+                <textarea id="jd" rows="9" placeholder="Paste the full job description here..."
+                    class="mt-4 flex-1 resize-y rounded-2xl border border-white/10 bg-black/60 p-4 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition focus:border-fuchsia-400/60 focus:ring-2 focus:ring-fuchsia-500/20"></textarea>
+            </div>
+
+            <div class="flex flex-col items-center gap-3 md:col-span-2">
+                <button id="analyze-btn" type="button"
+                    class="w-full rounded-xl bg-gradient-to-r from-indigo-500 to-fuchsia-500 px-8 py-3.5 font-semibold text-white shadow-lg shadow-indigo-500/30 transition hover:-translate-y-0.5 hover:brightness-110 disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0 sm:w-auto">
+                    Analyze my resume
+                </button>
+                <p id="error" class="hidden text-sm font-medium text-rose-400" role="alert"></p>
+            </div>
+        </section>
+
+        <!-- Scorecard -->
+        <section id="results" class="mt-12 hidden pb-20" aria-live="polite">
+            <h2 class="mb-6 text-3xl font-extrabold tracking-tight">Your scorecard</h2>
+
+            <div class="grid gap-6 md:grid-cols-3">
+                <!-- Overall -->
+                <div
+                    class="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-zinc-950/80 p-8 shadow-2xl">
+                    <div id="ring" class="flex h-44 w-44 items-center justify-center rounded-full">
+                        <div class="flex h-36 w-36 flex-col items-center justify-center rounded-full bg-zinc-950">
+                            <span id="overall-score" class="text-5xl font-extrabold">0</span>
+                            <span class="text-xs uppercase tracking-wider text-zinc-500">out of 100</span>
+                        </div>
+                    </div>
+                    <p id="overall-label" class="mt-5 text-center font-semibold text-zinc-200"></p>
+                </div>
+
+                <!-- Breakdown -->
+                <div class="rounded-3xl border border-white/10 bg-zinc-950/80 p-8 shadow-2xl md:col-span-2">
+                    <h3 class="font-bold">Breakdown</h3>
+                    <div id="bars" class="mt-5 grid gap-5"></div>
+                    <p id="stats" class="mt-6 text-sm text-zinc-500"></p>
+                </div>
+
+                <!-- Matched -->
+                <div class="rounded-3xl border border-white/10 bg-zinc-950/80 p-7 shadow-2xl">
+                    <h3 class="font-bold text-emerald-400">What you have</h3>
+                    <div id="matched" class="mt-4 flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Missing -->
+                <div class="rounded-3xl border border-white/10 bg-zinc-950/80 p-7 shadow-2xl">
+                    <h3 class="font-bold text-rose-400">What is missing</h3>
+                    <div id="missing" class="mt-4 flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- Strengths and weaknesses -->
+                <div class="rounded-3xl border border-white/10 bg-zinc-950/80 p-7 shadow-2xl">
+                    <h3 class="font-bold text-indigo-400">Strengths</h3>
+                    <ul id="strengths" class="mt-4 list-disc space-y-2 pl-5 text-sm text-zinc-300"></ul>
+                </div>
+                <div class="rounded-3xl border border-white/10 bg-zinc-950/80 p-7 shadow-2xl md:col-span-2">
+                    <h3 class="font-bold text-amber-400">Weaknesses and what to fix</h3>
+                    <ul id="weaknesses" class="mt-4 list-disc space-y-2 pl-5 text-sm text-zinc-300"></ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="border-t border-white/10 py-10 text-center text-sm text-zinc-500">
+        Your files stay in your browser. Nothing is uploaded.
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
